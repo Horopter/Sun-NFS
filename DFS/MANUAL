@@ -1,0 +1,173 @@
+Copyright <2017> <Santosh Kumar Desai>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Problem Statement :
+-------------------
+
+The purpose of this assignment is to give you programming exposure to distributed file systems. You are required to implement one part of file system using RPC. Your ultimate aim is to ensure implement a distributed file system in RPC environment. The system should address the following properties:
+1. scalability, 
+2. availability, 
+3. network partition tolerance.
+
+There are two cases that need to be addressed:
+Assumption:
+3 servers and 2 clients
+Uploading  request  at  server 1  creates  replica  at  server 2,  Uploading  request  at  server  2  creates replica at server 3, Uploading request at server 3 creates replica at server 1. Scalability is ensured using the groups formed for more servers as proposed by Maekawa. For the implementation assume there are only 3 servers who are participating.
+
+			
+				
+-------------------------					-------------------------
+|			|					|			|
+|			|					|			|
+|	   S1   	|-------------------------------------->|	   S2   	|
+|			|					|			|
+|			|					|			|
+-------------------------					-------------------------
+			A					/
+			 \				       /
+			  \				      /
+			   \	-------------------------    /
+			    \	|			|   /
+			     \	|			|  /
+			      \	|	   S3           | / 
+			       \|			|V
+				|			|
+				-------------------------
+
+
+
+
+Case 1:
+-------
+
+When client wants to upload a file on server
+a. Code should ask on which server file should be uploaded
+b. If file to be uploaded on S1 then replica must be created on S2, if S2 then replica should be created on S3, if S3 then replica should be created at S1.
+c. Once file is uploaded and replica is created then, consistency must be maintained among original file and its replica across the server.
+
+Note: Step b deals with availability of file and step c deals with consistency.
+
+Case 2:
+-------
+
+When client wants a file, which is not uploaded by him.
+a. Client generate a download request and broadcasted, on receiving a download request each server send its file listing to client that requested the download.
+b. On receiving the file listing, client send the file name to server. 
+
+Here 2 cases can occur:
+ 
+1.The server to whom request is meant is up and running --> Server send a file to client and request is completed.
+2. The server to whom request is meant is down --> on getting server status client will have option of either abort the process or move its request to another server which have replica 
+of  the  requested  file --> on  generating  second  request  and  server  2  is  up  and  running --> server send a file to client and request is completed.
+
+Note: Step b deals with network partition tolerance.
+
+Important requirement:
+
+When the server that was down again comes up, it contacts other servers for the latest copy of the file. Once the server is up and has contacted other servers, the files must be consistent.
+
+
+System Requirements:
+--------------------
+
+1. Ubuntu 14.04+
+2. gcc compiler configured
+3. rpc configured (SUN-RPC/rpcgen)
+3. portmap configured (It's better to check this for debugging.)
+4. 2 GB RAM
+5. 20 GB HDD
+
+How To Use:
+-----------
+
+The system has been configured for you according to the problem statement.
+
+You will need a minimum of three systems with two systems desirably active to properly check the utility of the app given to you.
+
+***Copy the current directory to the three systems and check README for instructions.
+
+* Server Configuration:
+
+Note down the ip address of each server through ifconfig. We will be using this later.
+If the server is meant to be Server 1, cd into S1 directory and run ./server. (Similarly for Servers 2 and 3).
+
+* Client Configuration:
+
+If the client is meant to be Client 1, cd into C1 directory.
+Open the config file and enter space separated addresses of server in the config.
+
+For example: 
+
+If server 1 has address 192.16.17.9
+If server 2 has address 192.16.17.10
+If server 3 has address 192.16.17.11
+
+config file will have the following entry
+
+192.16.17.9 192.16.17.10 192.16.17.11
+
+Save the config file.
+
+
+* Client Cron job configuration
+
+For each server, cd into corresponding folder and execute following commands
+
+$ chmod +x cron_instr
+$ ./cron_instr
+
+
+This will initiate a cron job that runs every minute.
+
+
+* Operations: 
+
+You are provided with the following commands.
+
+1. list
+2. exit
+3. get <filename> <servernum>
+4. put <filename> <servernum>
+
+list command : Broadcasts the request to show the files on each server.
+exit command : Exits the client. (Not client cron job).
+get command  : Fetches a file.
+put command  : Sends a file.
+
+*** You are required to run list command (and possibly get command later) before put command, so that you don't overwrite the updated file. (For consistency)
+*** This has not been automated because deadlock detection module takes a lot of time to be coded in C/C++.
+
+
+* Footnotes:
+
+Run time consistency and network partition tolerance are of high priority. This has been achieved by the following.
+
+Client initiated appoach : 
+
+We have assumed a "dumb" server that acts a file storage system only. Pressure on client is high.
+
+Replication :
+
+Replication and automatic pinging of server (if it is down) is performed by client cron.
+Or you can execute client_cron whenever you want to check replication and consistency.
+
+
+Code is not working?
+
+Report a bug at https://github.com/Horopter/Sun-NFS and we'll look into it.
+
+
+Don't like it?
+
+Try https://github.com/Horopter/Sun-NFS/DFS_SERVER for server initiated approach.
+
+Regards,
+
+- Santosh Kumar Desai (2017H1030130P)
+- Sanyam Jain         (2017h1030132P)
+
